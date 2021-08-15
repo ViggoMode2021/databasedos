@@ -1,0 +1,267 @@
+from tkinter import *
+from PIL import ImageTk, Image
+import sqlite3
+
+root = Tk()
+root.title('Memorias del verano dos mil veintiuno (2021)')
+root.geometry("500x500")
+root.config(bg='orange')
+
+#Databases
+
+#Create a database or connect to one
+
+conn = sqlite3.connect('address_book.db')
+
+#create cursor
+
+c = conn.cursor()
+
+#create table
+'''
+c.execute(""" CREATE TABLE addresses (
+          nombre_text,
+          clase_text,
+          comida_favorita text,
+          música_favorita text,
+          lugar_favorito text,
+          personas_importantes int
+          )""")
+'''
+def update():
+
+    conn = sqlite3.connect('address_book.db')
+
+    c = conn.cursor()
+
+    record_id = delete_box.get()
+
+    c.execute("""UPDATE addresses SET
+        nombre = :nombre,
+        clase = :clase,
+        comida favorita = :comida favorita,
+        música favorita = :música favorita,
+        lugar favorito = :lugar,
+        personas importantes = :zipcode
+        
+       WHERE oid = :oid""",
+        {
+        'nombre': nombre_editor.get(),
+        'clase': periodo_editor.get(),
+        'comida favorita': comida_editor.get(),
+        'música favorita': musica_editor.get(),
+        'lugar favorito': state_editor.get(),
+        'personas importantes': zipcode_editor.get(),
+        'oid': record_id
+        })
+
+    conn.commit()
+
+    conn.close()
+
+    editor.destroy()
+
+#create edit function to update record
+def edit():
+    global editor
+    editor = Tk()
+    editor.title('Editar un registro')
+    editor.geometry("500x500")
+
+    conn = sqlite3.connect('address_book.db')
+
+    c = conn.cursor()
+
+    record_id = delete_box.get()
+
+    c.execute("SELECT *, oid FROM addresses WHERE oid = " + record_id)
+    records = c.fetchall()
+
+    #print(records)
+
+    #loop through results
+    #print_records = ''
+    #for record in records[0:6]:
+        #print_records += str(record) + "\n"
+
+    global nombre_editor
+    global clase_editor
+    global comida_editor
+    global musica_editor
+    global lugar_editor
+    global personas_editor
+
+    nombre_editor = Entry(editor, width = 30, font=('helvetica', 25))
+    nombre_editor.grid(row=0, column =1, padx=20, pady=(10, 0))
+
+    clase_editor = Entry(editor, width = 30)
+    clase_editor.grid(row=1, column =1, padx=20)
+
+    comida_editor = Entry(editor, width = 30)
+    comida_editor.grid(row=2, column =1, padx=20)
+
+    musica_editor = Entry(editor, width = 30)
+    musica_editor.grid(row=3, column =1, padx=20)
+
+    lugar_editor = Entry(editor, width = 30)
+    lugar_editor.grid(row=4, column =1, padx=20)
+
+    personas_editor = Entry(editor, width = 30)
+    personas_editor.grid(row=5, column =1, padx=20)
+
+    #create text box label
+    nombre_label = Label(editor, text= "Nombre :")
+    nombre_label.grid(row=0, column = 0, pady=(10, 0))
+    clase_label = Label(editor, text= "clase :")
+    clase_label.grid(row=1, column = 0)
+    comida_label = Label(editor, text= "Comida favorita :")
+    comida_label.grid(row=2, column = 0)
+    musica_label = Label(editor, text= "Música favorita :")
+    musica_label.grid(row=3, column = 0)
+    lugar_label = Label(editor, text= "Lugar favorito :")
+    lugar_label.grid(row=4, column = 0)
+    personas_label = Label(editor, text= "Personas importantes: ")
+    personas_label.grid(row=5, column = 0)
+
+    #create button to save edited record
+    edit_btn = Button(editor, text="Guardar registro", command=update)
+    edit_btn.grid(row=6, column =0, columnspan=2, pady=10, padx=10, ipadx=145)
+
+    #Loop through results
+    for record in records:
+        nombre_editor.insert(0, record[0])
+        clase_editor.insert(0, record[1])
+        comida_editor.insert(0, record[2])
+        musica_editor.insert(0, record[3])
+        lugar_editor.insert(0, record[4])
+        personas_editor.insert(0, record[5])
+
+#create function to delete a record
+def delete():
+    conn = sqlite3.connect('address_book.db')
+
+    c = conn.cursor()
+
+    c.execute("DELETE from addresses WHERE oid = " + delete_box.get())
+
+    delete_box.delete(0, END)
+
+    conn.commit()
+
+    conn.close()
+
+#create submit function
+def submit():
+    conn = sqlite3.connect('address_book.db')
+
+    c = conn.cursor()
+
+    c.execute("INSERT INTO addresses VALUES (:nombre, :clase, :comida_favorita, :música_favorita, :lugar_favorito, :personas_importantes)",
+            {
+             'nombre': nombre.get(),
+             'clase': clase.get(),
+             'comida_favorita': comida.get(),
+             'música_favorita': musica.get(),
+             'lugar_favorito': lugar.get(),
+             'personas_importantes': personas.get(),
+            })
+
+    #insert into table
+
+    conn.commit()
+
+    conn.close()
+
+#query database
+def query():
+    conn = sqlite3.connect('address_book.db')
+
+    c = conn.cursor()
+
+    c.execute("SELECT *, oid FROM addresses")
+    records = c.fetchall()
+    #print(records)
+
+    #loop through results
+    print_records = ''
+    for record in records[0:6]:
+        print_records += str(record) + "\n"
+
+    query_label = Label(root, text=print_records, font=('calibri', 20))
+    query_label.grid(row=1, column=3, columnspan=2)
+
+
+    conn.commit()
+
+    conn.close()
+
+#clear text
+    nombre.delete(0, END)
+    clase.delete(0, END)
+    comida.delete(0, END)
+    musica.delete(0, END)
+    lugar.delete(0, END)
+    personas.delete(0, END)
+
+#create text boxes
+nombre = Entry(root, width = 30)
+nombre.grid(row=0, column =1, padx=20, pady=(10, 0))
+
+clase = Entry(root, width = 30)
+clase.grid(row=1, column =1, padx=20)
+
+comida = Entry(root, width = 30)
+comida.grid(row=2, column =1, padx=20)
+
+musica = Entry(root, width = 30)
+musica.grid(row=3, column =1, padx=20)
+
+lugar = Entry(root, width = 30)
+lugar.grid(row=4, column =1, padx=20)
+
+personas = Entry(root, width = 30)
+personas.grid(row=5, column =1, padx=20)
+delete_box = Entry(root, width=30)
+delete_box.grid(row=9, column=1, pady=5)
+
+#create text box label
+nombre_label = Label(root, text= "Nombre :", font=('helvetica', 25))
+nombre_label.grid(row=0, column = 0, pady=(10, 0))
+clase_label = Label(root, text= "Periodo de clase :", font=('helvetica', 25))
+clase_label.grid(row=1, column = 0)
+comida_label = Label(root, text= "Comida favorita :", font=('helvetica', 25))
+comida_label.grid(row=2, column = 0)
+musica_label = Label(root, text= "Música favorita :", font=('helvetica', 25))
+musica_label.grid(row=3, column = 0)
+lugar_label = Label(root, text= "Lugar favorito :", font=('helvetica', 25))
+lugar_label.grid(row=4, column = 0)
+personas_label = Label(root, text= "Personas importantes: ",font=('helvetica', 25))
+personas_label.grid(row=5, column = 0)
+
+delete_box_label = Label(root, text="Seleccionar: " )
+delete_box_label.grid(row=9, column=0, pady=5)
+#create submit button
+submit_button = Button(root, text="Agregar registro a base de datos", command=submit, font=('helvetica', 25))
+submit_button.grid(row=6, column =0, columnspan=2, pady=10, padx=10, ipadx=137)
+
+#query button
+query_btn = Button(root, text="Mostrar registro", command=query, font=('helvetica', 25))
+query_btn.grid(row=16, column =0, columnspan=2, pady=10, padx=10, ipadx=134)
+
+#create a delete button
+delete_btn = Button(root, text="Eliminar registro", command=delete, font=('helvetica', 25))
+delete_btn.grid(row=10, column =0, columnspan=2, pady=10, padx=10, ipadx=136)
+
+#create an update button
+edit_btn = Button(root, text="Editar registro", command=edit, font=('helvetica', 25))
+edit_btn.grid(row=11, column =0, columnspan=2, pady=10, padx=10, ipadx=145)
+
+
+#commit changes
+conn.commit()
+
+#Close connections
+
+conn.close()
+
+root.mainloop()
